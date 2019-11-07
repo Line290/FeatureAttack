@@ -211,6 +211,8 @@ for clean_idx in tqdm(range(10000)):
     other_label_test_label = all_test_label[other_label_test_idx]
     num_other_label_img = other_label_test_data.size(0)
     # print(other_label_test_idx.size(), other_label_test_data.size(), other_label_test_label.size())
+
+    # Setting number of candidate target images
     for i in range(1):
         num_target_imgs = 0
         target_img_list, target_label_list = [], []
@@ -241,20 +243,19 @@ for clean_idx in tqdm(range(10000)):
         # print(predicted.size())
         corrent_num = predicted.eq(labels).sum().item()
         attack_success_num = predicted.eq(target_labels).sum().item()
-        # print('pred:', predicted)
-        # print('orig:', labels)
-        # print('target:', target_labels)
-        # print(corrent_num, attack_success_num)
+
+        # At least one misclassified
         if corrent_num != batch_size:
             untarget_success_count += 1
             if attack_success_num != 0:
                 target_success_count += 1
+            break
 
     total += 1
     duration = time.time() - start_time
     if clean_idx % args.log_step == 0:
         print(
-            "step %d, duration %.2f, aver untarget attack success %.2f, aver target attack success %.2f"
+            "step %d, duration %.2f, aver untargeted attack success %.2f, aver targeted attack success %.2f"
             % (clean_idx, duration, 100. * untarget_success_count / total, 100.*target_success_count / total))
 
 acc = 100. * untarget_success_count / total
