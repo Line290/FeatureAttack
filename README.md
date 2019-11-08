@@ -25,7 +25,7 @@ cd cifar10_challenge && python feature_attack_batch_tf.py
 |-----------------|-------|------|-------|------|------------------------|
 | Feature Scatter | 90.3  | 78.4 | 71.1  | 62.4 | 37.4(5000 test images) |
 | Adv_inter       | 90.5  | 78.1 | 74.4  | 69.5 | 38(5600 test images)   |
-| Madry           | 87.25 |      | 45.87 |      | ~46(7800 test images)  |
+| Madry           | 87.25 |      | 45.87 |      | 46.37                  |
 
 
 
