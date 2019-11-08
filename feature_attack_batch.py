@@ -151,7 +151,6 @@ if args.resume and args.init_model_pass != '-1':
 criterion = nn.CrossEntropyLoss()
 
 config_feature_attack = {
-    'train': True,
     'epsilon': 8.0 / 255 * 2,
     'num_steps': 100,
     'step_size': 1.0 / 255 * 2,
