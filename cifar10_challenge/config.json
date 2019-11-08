@@ -29,5 +29,6 @@
   "step_size": 1.0,
   "random_start": true,
   "loss_func": "cosine",
-  "store_adv_path": "attack.npy"
+  "store_adv_path": "attack.npy",
+  "early_stop": true
 }
