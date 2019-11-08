@@ -131,14 +131,14 @@ if __name__ == '__main__':
                 target_labels = np.array(target_label_list)
                 x_batch_repeat = x_batch.repeat(target_images_size, 0)
                 y_batch_repeat = y_batch.repeat(target_images_size)
-                print(x_batch_repeat.shape, y_batch_repeat)
-                print(target_inputs.shape, target_labels)
+                # print(x_batch_repeat.shape, y_batch_repeat)
+                # print(target_inputs.shape, target_labels)
 
 
                 x_batch_adv = attack.perturb(x_batch_repeat, target_inputs, sess)
 
                 preds = sess.run(model.predictions, feed_dict={model.x_input: x_batch_adv})
-                print(preds)
+                # print(preds)
                 not_correct_idices = (preds.reshape(-1) != y_batch_repeat.reshape(-1))
                 not_correct_num = not_correct_idices.sum()
                 attack_success_num = (preds.reshape(-1) == target_labels.reshape(-1)).sum()
