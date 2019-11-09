@@ -32,6 +32,15 @@ class Feature_Attack:
             normalized_target_feats = tf.nn.l2_normalize(self.target_feats, dim=1)
             cos_dist = 1. - tf.reduce_sum(normalized_input_feats * normalized_target_feats, axis=1)  # cos: 1-1 not n-n
             loss = tf.reduce_mean(cos_dist)
+        elif self.loss_func == 'euclid':
+            normalized_input_feats = tf.nn.l2_normalize(self.model.feat, dim=1)
+            normalized_target_feats = tf.nn.l2_normalize(self.target_feats, dim=1)
+            euclid_dist = tf.reduce_sum(tf.pow(normalized_input_feats - normalized_target_feats, 2), axis=1)
+            loss = tf.reduce_sum(euclid_dist)
+        elif self.loss_func == 'OT':
+            pass
+        else:
+            pass
 
         self.grad = tf.gradients(loss, model.x_input)[0]
 
@@ -56,9 +65,9 @@ class Feature_Attack:
             grad, num_corr, preds = sess.run([self.grad,
                                               self.model.num_correct,
                                               self.model.predictions],
-                                              feed_dict={self.model.x_input: x,
-                                                         self.model.y_input: y,
-                                                         self.target_feats: target_feat_output})
+                                             feed_dict={self.model.x_input: x,
+                                                        self.model.y_input: y,
+                                                        self.target_feats: target_feat_output})
             # early stop
             if self.early_stop:
                 if num_corr != batch_size:
@@ -101,9 +110,9 @@ if __name__ == '__main__':
         # Iterate over the samples batch-by-batch
         num_eval_examples = config['num_eval_examples']
         eval_batch_size = config['eval_batch_size']
+        num_total_target_images = config['num_total_target_images']
         assert eval_batch_size == 1
         target_images_size = config['target_images_size']
-        num_batches = num_eval_examples
 
         x_adv = []  # adv accumulator
 
@@ -119,38 +128,28 @@ if __name__ == '__main__':
             y_batch = cifar.eval_data.ys[ibatch]
 
             # target images
-            batch_idx_list = {}
             other_label_test_idx = (cifar.eval_data.ys != y_batch)
             other_label_test_data = cifar.eval_data.xs[other_label_test_idx]
             other_label_test_label = cifar.eval_data.ys[other_label_test_idx]
             num_other_label_img = other_label_test_data.shape[0]
+            candidate_indices = np.random.randint(0, num_other_label_img, num_total_target_images)
+            num_batches = int(math.ceil(num_total_target_images / target_images_size))
             # print(other_label_test_idx.shape, other_label_test_data.shape, other_label_test_label.shape)
 
             adv_idx = 0
-            for i in range(5):
-                num_target_imgs = 0
-                target_img_list, target_label_list = [], []
-                while num_target_imgs < target_images_size:
-                    target_idx = random.randint(0, num_other_label_img - 1)
-                    if target_idx in batch_idx_list:
-                        continue
-                    batch_idx_list[target_idx] = -1
-                    target_label = other_label_test_label[target_idx]
-                    target_input = other_label_test_data[target_idx][None, ...]
-                    target_img_list.append(target_input)
-                    target_label_list.append(target_label)
-                    num_target_imgs += 1
-                target_inputs = np.concatenate(target_img_list, 0)
-                target_labels = np.array(target_label_list)
-                x_batch_repeat = x_batch.repeat(target_images_size, 0)
-                y_batch_repeat = y_batch.repeat(target_images_size)
+            for i in range(num_batches):
+                bstart = i * target_images_size
+                bend = min(bstart + target_images_size, num_total_target_images)
+                target_inputs = other_label_test_data[bstart:bend, ...]
+                target_labels = other_label_test_label[bstart:bend]
+                tmp_batch_size = target_inputs.shape[0]
+                x_batch_repeat = x_batch.repeat(tmp_batch_size, 0)
+                y_batch_repeat = y_batch.repeat(tmp_batch_size)
                 # print(x_batch_repeat.shape, y_batch_repeat)
                 # print(target_inputs.shape, target_labels)
 
                 x_batch_adv, preds = attack.perturb(x_batch_repeat, y_batch_repeat, target_inputs, sess)
 
-                # preds = sess.run(model.predictions, feed_dict={model.x_input: x_batch_adv})
-                # print(preds)
                 not_correct_idices = (preds.reshape(-1) != y_batch_repeat.reshape(-1))
                 not_correct_num = not_correct_idices.sum()
                 attack_success_num = (preds.reshape(-1) == target_labels.reshape(-1)).sum()

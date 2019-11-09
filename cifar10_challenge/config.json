@@ -18,14 +18,15 @@
   "momentum": 0.9,
 
   "_comment": "===== EVAL CONFIGURATION =====",
-  "num_eval_examples": 10,
+  "num_eval_examples": 10000,
   "eval_batch_size": 1,
-  "target_images_size": 100,
+  "target_images_size": 200,
+  "num_total_target_images": 1000,
   "eval_on_cpu": false,
 
   "_comment": "=====ADVERSARIAL EXAMPLES CONFIGURATION=====",
   "epsilon": 8.0,
-  "num_steps": 100,
+  "num_steps": 20,
   "step_size": 1.0,
   "random_start": true,
   "loss_func": "cosine",
