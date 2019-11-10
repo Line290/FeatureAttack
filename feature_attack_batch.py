@@ -29,6 +29,8 @@ parser.add_argument('--resume',
                     action='store_true',
                     help='resume from checkpoint')
 parser.add_argument('--model_dir', type=str, help='model path')
+parser.add_argument('--store_adv_path', default='x_adv.pt', type=str,
+                    help='adv. images store path')
 parser.add_argument('--init_model_pass',
                     default='-1',
                     type=str,
@@ -151,18 +153,22 @@ if args.resume and args.init_model_pass != '-1':
 criterion = nn.CrossEntropyLoss()
 
 config_feature_attack = {
+    'train': False,
     'epsilon': 8.0 / 255 * 2,
-    'num_steps': 100,
+    'num_steps': 50,
     'step_size': 1.0 / 255 * 2,
     'random_start': True,
+    'early_stop': True,
+    'num_total_target_images': 500
 }
 
 
-def attack(model, inputs, target_inputs, config):
+def attack(model, inputs, target_inputs, y, config):
     step_size = config['step_size']
     epsilon = config['epsilon']
     num_steps = config['num_steps']
     random_start = config['random_start']
+    early_stop = config['early_stop']
     model.eval()
 
     x = inputs.detach()
@@ -178,6 +184,11 @@ def attack(model, inputs, target_inputs, config):
         if x.grad is not None:
             x.grad.data.fill_(0)
         logits_pred, feat = model(x)
+        preds = logits_pred.argmax(1)
+        if early_stop:
+            num_not_corr = (preds != y).sum().item()
+            if num_not_corr > 0:
+                break
         inver_loss = ot.pair_cos_dist(feat, target_feat)
         adv_loss = inver_loss.mean()
         adv_loss.backward()
@@ -185,22 +196,28 @@ def attack(model, inputs, target_inputs, config):
         x_adv = torch.min(torch.max(x_adv, inputs - epsilon), inputs + epsilon)
         x_adv = torch.clamp(x_adv, -1.0, 1.0)
         x = Variable(x_adv)
-    return x.detach()
+    return x.detach(), preds
 
 
-batch_size = args.batch_size_test
-print('batch size is: ', batch_size)
+target_images_size = args.batch_size_test
+print('target batch size is: ', target_images_size)
+num_total_target_images = config_feature_attack['num_total_target_images']
+x_adv = []  # adv accumulator
+
 net.eval()
+
 untarget_success_count = 0
 target_success_count = 0
 total = 0
+# load all test data
 iterator = tqdm(testloader, ncols=0, leave=False)
 all_test_data, all_test_label = None, None
 for i, (test_data, test_label) in enumerate(iterator):
     all_test_data, all_test_label = test_data, test_label
 print(all_test_data.size())
 
-for clean_idx in tqdm(range(10000)):
+num_eval_imgs = all_test_data.size(0)
+for clean_idx in tqdm(range(num_eval_imgs)):
     input, label_cpu = all_test_data[clean_idx].unsqueeze(0), all_test_label[clean_idx].unsqueeze(0)
     # print(inputs.size(), labels_cpu.size())
     start_time = time.time()
@@ -209,56 +226,56 @@ for clean_idx in tqdm(range(10000)):
     other_label_test_data = all_test_data[other_label_test_idx]
     other_label_test_label = all_test_label[other_label_test_idx]
     num_other_label_img = other_label_test_data.size(0)
+
+    # Setting candidate targeted images
+    candidate_indices = torch.zeros(num_total_target_images).long().random_(0, num_other_label_img)
+    num_batches = int(math.ceil(num_total_target_images / target_images_size))
     # print(other_label_test_idx.size(), other_label_test_data.size(), other_label_test_label.size())
 
-    # Setting number of candidate target images
-    for i in range(1):
-        num_target_imgs = 0
-        target_img_list, target_label_list = [], []
-        while num_target_imgs < batch_size:
-            target_idx = random.randint(0, num_other_label_img-1)
-            if target_idx in batch_idx_list:
-                continue
-            batch_idx_list[target_idx] = -1
-            target_label_cpu = other_label_test_label[target_idx].unsqueeze(0)
-            target_input = other_label_test_data[target_idx].unsqueeze(0)
-            target_img_list.append(target_input)
-            target_label_list.append(target_label_cpu)
-            num_target_imgs += 1
+    # Init index of image which be attacked successfully
+    adv_idx = 0
+    for i in range(num_batches):
+        bstart = i * target_images_size
+        bend = min(bstart + target_images_size, num_total_target_images)
 
-        # print('find a different label')
-        input, label = input.to(device), label_cpu.to(device)
-        inputs = input.repeat(batch_size, 1, 1, 1)
-        labels = label.repeat(batch_size)
-
-        target_inputs, target_labels_cpu = torch.cat(target_img_list, 0), torch.cat(target_label_list, 0)
+        target_inputs = other_label_test_data[candidate_indices[bstart:bend]]
+        target_labels_cpu = other_label_test_label[candidate_indices[bstart:bend]]
         target_inputs, target_labels = target_inputs.to(device), target_labels_cpu.to(device)
+
+        input, label = input.to(device), label_cpu.to(device)
+        inputs = input.repeat(target_images_size, 1, 1, 1)
+        labels = label.repeat(target_images_size)
+
+
         # print(inputs.size(), labels)
         # print(target_inputs.size(), target_labels)
-        x_adv = attack(net, inputs, target_inputs, config_feature_attack)
-        outputs, _ = net(x_adv)
+        x_batch_adv, predicted = attack(net, inputs, target_inputs, labels, config_feature_attack)
 
-        _, predicted = outputs.max(1)
         # print(predicted.size())
-        corrent_num = predicted.eq(labels).sum().item()
+        not_correct_idices = (predicted != labels).nonzero().view(-1)
+        not_corrent_num = not_correct_idices.size(0)
         attack_success_num = predicted.eq(target_labels).sum().item()
 
         # At least one misclassified
-        if corrent_num != batch_size:
+        if not_corrent_num != 0:
             untarget_success_count += 1
             if attack_success_num != 0:
                 target_success_count += 1
+            adv_idx = not_correct_idices[0]
             break
 
     total += 1
     duration = time.time() - start_time
+    x_adv.append(x_batch_adv[adv_idx].unsqueeze(0).cpu())
+
     if clean_idx % args.log_step == 0:
         print(
             "step %d, duration %.2f, aver untargeted attack success %.2f, aver targeted attack success %.2f"
             % (clean_idx, duration, 100. * untarget_success_count / total, 100.*target_success_count / total))
-
+        sys.stdout.flush()
 acc = 100. * untarget_success_count / total
 print('Val acc:', acc)
-
-
-
+print('Storing examples')
+path = args.store_adv_path
+x_adv = torch.cat(x_adv, dim=0)
+torch.save({'x_adv': x_adv}, path)

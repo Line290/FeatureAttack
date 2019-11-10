@@ -140,8 +140,8 @@ if __name__ == '__main__':
             for i in range(num_batches):
                 bstart = i * target_images_size
                 bend = min(bstart + target_images_size, num_total_target_images)
-                target_inputs = other_label_test_data[bstart:bend, ...]
-                target_labels = other_label_test_label[bstart:bend]
+                target_inputs = other_label_test_data[candidate_indices[bstart:bend]]
+                target_labels = other_label_test_label[candidate_indices[bstart:bend]]
                 tmp_batch_size = target_inputs.shape[0]
                 x_batch_repeat = x_batch.repeat(tmp_batch_size, 0)
                 y_batch_repeat = y_batch.repeat(tmp_batch_size)
