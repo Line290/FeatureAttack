@@ -21,12 +21,12 @@ cd cifar10_challenge && python feature_attack_batch_tf.py
 
 ### Result
 
-| attack type     | clean | FGSM | PGD20 | CW20 | FeatureAttack100       |
-|-----------------|-------|------|-------|------|------------------------|
-| Feature Scatter | 90.3  | 78.4 | 71.1  | 62.4 | 36.94                  |
-| Adv_inter       | 90.5  | 78.1 | 74.4  | 69.5 | 37.64                  |
-| Madry           | 87.25 |      | 45.87 |      | 46.37                  |
-
+| attack type                   | clean | FGSM  | PGD20 | CW20  | FeatureAttack100 |
+|-------------------------------|-------|-------|-------|-------|------------------|
+| Feature Scatter               | 90.3  | 78.4  | 71.1  | 62.4  | 36.94            |
+| Adv_inter                     | 90.5  | 78.1  | 74.4  | 69.5  | 37.64            |
+| Madry                         | 87.25 |       | 45.87 |       | 46.37            |
+| [Sensible adversarial learning][sensible] | 91.51 | 74.32 | 62.04 | 59.91 | 42.21            |
 
 
 
@@ -38,4 +38,5 @@ cd cifar10_challenge && python feature_attack_batch_tf.py
 [FS_paper]:https://arxiv.org/pdf/1907.10764.pdf  
 [Adv_inter_paper]:https://openreview.net/pdf?id=Syejj0NYvr  
 [FS_model]:https://drive.google.com/open?id=1TCw1uVrAikOZIObHfALE-FuXXa7UKDDo  
-[Adv_inter_model]:https://drive.google.com/open?id=1ak-Qovkra3oIqukAWc32rLJcAPkdpN79  
+[Adv_inter_model]:https://drive.google.com/open?id=1ak-Qovkra3oIqukAWc32rLJcAPkdpN79
+[sensible]:https://openreview.net/forum?id=rJlf_RVKwr  
