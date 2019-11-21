@@ -174,6 +174,7 @@ def attack(model, inputs, target_inputs, y, config):
     x = inputs.detach()
     if random_start:
         x = x + torch.zeros_like(x).uniform_(-epsilon, epsilon)
+        x = torch.clamp(x, -1.0, 1.0)
 
     target_logits, target_feat = model(target_inputs)
     target_feat = target_feat.detach()
