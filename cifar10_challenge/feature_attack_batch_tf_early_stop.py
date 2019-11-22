@@ -55,6 +55,7 @@ class Feature_Attack:
         batch_size = x_nat.shape[0]
         if self.rand:
             x = x_nat + np.random.uniform(-self.epsilon, self.epsilon, x_nat.shape)
+            x = x_nat + np.random.random_integers(int(-self.epsilon), int(self.epsilon), x_nat.shape)
             x = np.clip(x, 0, 255)  # ensure valid pixel range
         else:
             x = np.copy(x_nat)
