@@ -21,12 +21,13 @@ cd cifar10_challenge && python feature_attack_batch_tf.py
 
 ### Result
 
-| attack type                   | clean | FGSM  | PGD20 | CW20  | FeatureAttack100 | adv_test_images |
+| attack type                   | clean | FGSM  | PGD20-2-8 | CW20-2-8  | FeatureAttack100 | adv_test_images |
 |-------------------------------|-------|-------|-------|-------|------------------|------------------
 | Feature Scatter               | 90.3  | 78.4  | 71.1  | 62.4  | 36.94            |
 | Adv_inter                     | 90.5  | 78.1  | 74.4  | 69.5  | 37.64            |
 | Madry                         | 87.25 |       | 45.87 |       | 46.37            |
 | [Sensible adversarial learning][sensible] | 91.51 | 74.32 | 62.04 | 59.91 | 43.76|[sensible_adv_x][sensible_adv_x_link]
+| [bilateral_AT][BAT] ([mosa_eps4][BAT_code_link])| 92.8  |       | 71.0(pgd100-2-8)|67.9(CW100-2-8)|32.28|[bilater_adv_x][bilater_adv_x_link]
 
 
 ##### Introduction of adversarial test images
@@ -39,7 +40,6 @@ adv_X = adv_X_uint8.type(torch.FloatTensor) / 255.  # [0, 1]
 assert adv_X.min() >= 0. and adv_X.max() <= 1.
 abs_diff = torch.abs(adv_X - nat_X)
 assert abs_diff <= eps + 0.0001
-
 ```
 
 
@@ -52,3 +52,6 @@ assert abs_diff <= eps + 0.0001
 [Adv_inter_model]:https://drive.google.com/open?id=1ak-Qovkra3oIqukAWc32rLJcAPkdpN79
 [sensible]:https://openreview.net/forum?id=rJlf_RVKwr
 [sensible_adv_x_link]:https://drive.google.com/open?id=1cl-NcOYGqQe7cETLqeTdNVcDbt_SYn8L
+[BAT]:https://arxiv.org/abs/1811.10716
+[BAT_code_link]:https://github.com/wjyouch/bilateral-adversarial-training
+[bilater_adv_x_link]:https://drive.google.com/open?id=1cl-NcOYGqQe7cETLqeTdNVcDbt_SYn8L

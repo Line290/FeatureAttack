@@ -83,5 +83,4 @@ class CWLoss(nn.Module):
         if self.reduce:
             sample_num = onehot_targets.shape[0]
             loss = loss / sample_num
-
         return loss
