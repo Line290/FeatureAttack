@@ -28,8 +28,8 @@ cd cifar10_challenge && python feature_attack_batch_tf.py
 | Madry                         | 87.25 |       | 45.87 |       | 46.37            |
 | [Sensible adversarial learning][sensible] | 91.51 | 74.32 | 62.04 | 59.91 | 43.76|[sensible_adv_x][sensible_adv_x_link]
 | [bilateral_AT][BAT] ([mosa_eps4][BAT_code_link])| 92.8  |       | 71.0(pgd100-2-8)|67.9(CW100-2-8)|32.28|[bilater_adv_x][bilater_adv_x_link]
-| [GCE][GCE_paper]| |62.74% | [9.55%(MNIST_PGD40-0.01-0.2)][GCE_github] | | 0|
-
+| [GCE][GCE_paper]| |62.74 | [9.55(MNIST_PGD40-0.01-0.2)][GCE_github] | | 0|
+| TRADES | 84.92 | | 55.4 | 53.89 | 52.94(50-1-8-200) |[TRADES_adv_x_float_0~1_npy][TRADES_adv_x_link] |
 
 ##### Introduction of adversarial test images
 For CIFAR10 test data set
@@ -58,3 +58,4 @@ assert abs_diff <= eps + 0.0001
 [bilater_adv_x_link]:https://drive.google.com/open?id=1cl-NcOYGqQe7cETLqeTdNVcDbt_SYn8L
 [GCE_paper]:https://arxiv.org/pdf/1903.09799.pdf
 [GCE_github]:https://github.com/henry8527/GCE
+[TRADES_adv_x_link]:https://drive.google.com/open?id=19h3UMsCGcfZgNLog-wKPvFaOMSBBgAgt
