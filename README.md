@@ -21,7 +21,7 @@ cd cifar10_challenge && python feature_attack_batch_tf.py
 
 ### Result
 
-| attack type                   | clean | FGSM  | PGD20-2-8 | CW20-2-8  | FeatureAttack100 | adv_test_images |
+| attack type                   | clean | FGSM  | PGD20-2-8 | CW20-2-8  | FeatureAttack20-1-8-100(100 target images)| adv_test_images |
 |-------------------------------|-------|-------|-------|-------|------------------|------------------
 | Feature Scatter               | 90.3  | 78.4  | 71.1  | 62.4  | 36.94            |
 | Adv_inter                     | 90.5  | 78.1  | 74.4  | 69.5  | 37.64            |
